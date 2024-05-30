@@ -1,0 +1,2 @@
+import { initializeWebGPU } from "../../static";
+

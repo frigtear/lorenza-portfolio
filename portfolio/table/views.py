@@ -1,6 +1,9 @@
 from django.shortcuts import render
+from django.template import loader
 from django.http import HttpResponse
 
+
 def render_table(request):
-    return HttpResponse("insert table here")
-# Create your views here.
+    return render(request, 'table.html')
+
+
