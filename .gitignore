@@ -4,3 +4,4 @@ portfolio/db.sqlite3
 portfolio/living_room/__pycache__
 portfolio/home/__pycache__
 portfolio/aboutMe/__pycache__
+static_root

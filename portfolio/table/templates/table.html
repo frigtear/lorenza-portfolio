@@ -1,5 +1,8 @@
-{% extends "index.html" %}
+{% extends "portfolio/index.html" %}
 {% load static %}
-{% block table %}
-<script src="{% static 'table/table.js' %}">  </script>
+{% block tableScript %}
+<script type = "module" src="{% static 'table.js' %}">  </script>
 {% endblock %}
+
+
+

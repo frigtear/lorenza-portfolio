@@ -1,0 +1,11 @@
+
+{% load static %}
+<body>
+    <script type="module" src="{% static 'index.js' %}"> </script>
+    {% block tableScript %}
+    {% endblock %}
+    <div id="canvas-container">
+        <canvas id="main"> </canvas>
+    </div>
+    
+</body>
