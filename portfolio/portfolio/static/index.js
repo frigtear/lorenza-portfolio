@@ -16,22 +16,70 @@ export class Client {
     }
 }
 
-export class WebGpuEnvironment{
-
-    constructor(client, pipeline, renderpass, shaderModule, commandBuffer){
-        this.client = client
-        this.pipeline = pipeline
-        this.renderpass = renderpass
-        this.shaderModule = shaderModule
-        this.commandBuffer = commandBuffer
+export class WebGpuBuilder{
+    clearColor;
+    pipeline;
+    shaderModule;
+    commandBuffer;
+    renderPassDescriptor; 
+    appName;
+    constructor(name) {
+        this.clearColor = [0.3, 0.3, 0.3, 1.0] // GRAY
+        this.appName = name;
+        this.renderPassDescriptor = {
+            label:`${this.appName} render pass`,
+            colorAttachments: [
+                {
+                    clearValue: this.clearColor,
+                    loadOp: 'clear',
+                    storeOp: 'store',
+                }
+            ]
+        }
+        
+     
     }
 
-    render() {
-        this.client.device.submit([this.commandBuffer])
+    resizeCanvas(client){
+        client.canvas.width = window.innerWidth
+        client.canvas.height = window.innerHeight
+    }
+
+    setPipeline(client){
+        const renderPipeline = client.device.createRenderPipeline({
+            label:`${this.name} pipeline`,
+            layout:'auto',
+            vertex:{
+                module:this.shaderModule,
+                entryPoint:'vs'
+            },
+            fragment:{
+                module:this.shaderModule,
+                entryPoint:'fs',
+                targets:[{format:client.format}]
+            }
+        })
+        this.pipeline = renderPipeline
+    }
+
+    setShaderModule(client, code){
+        const module = client.device.createShaderModule({
+            label:`${this.name} shader module`,
+            code:code
+        });
+        this.shaderModule = module
+    }
+
+    setCommandBuffer(buffer){
+        this.commandBuffer = buffer
+    }
+
+    run(client) {
+        client.device.queue.submit([this.commandBuffer])
     }
 }
 
-export async function initializeWebGPU(){
+export async function getClient(){
 
     if (!navigator.gpu){
         fail()
