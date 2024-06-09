@@ -5,3 +5,4 @@ portfolio/living_room/__pycache__
 portfolio/home/__pycache__
 portfolio/aboutMe/__pycache__
 static_root
+.DS_Store
