@@ -23,9 +23,12 @@ export class WebGpuBuilder{
     commandBuffer;
     renderPassDescriptor; 
     appName;
-    constructor(name) {
+    client;
+
+    constructor(name, client) {
         this.clearColor = [0.3, 0.3, 0.3, 1.0] // GRAY
         this.appName = name;
+        this.client = client;
         this.renderPassDescriptor = {
             label:`${this.appName} render pass`,
             colorAttachments: [
@@ -40,13 +43,22 @@ export class WebGpuBuilder{
      
     }
 
-    resizeCanvas(client){
-        client.canvas.width = window.innerWidth
-        client.canvas.height = window.innerHeight
+    resizeCanvas(){
+        this.client.canvas.width = window.innerWidth
+        this.client.canvas.height = window.innerHeight
+        
+        const dpr = window.devicePixelRatio || 1;
+        const width = this.client.canvas.clientWidth;
+        const height = this.client.canvas.clientHeight;
+        if (this.client.canvas.width !== width || this.client.canvas.height !== height) {
+            this.client.canvas.width = width;
+            this.client.canvas.height = height;
+        }
+        
     }
 
-    setPipeline(client){
-        const renderPipeline = client.device.createRenderPipeline({
+    setPipeline(){
+        const renderPipeline = this.client.device.createRenderPipeline({
             label:`${this.name} pipeline`,
             layout:'auto',
             vertex:{
@@ -56,14 +68,14 @@ export class WebGpuBuilder{
             fragment:{
                 module:this.shaderModule,
                 entryPoint:'fs',
-                targets:[{format:client.format}]
+                targets:[{format:this.client.format}]
             }
         })
         this.pipeline = renderPipeline
     }
 
-    setShaderModule(client, code){
-        const module = client.device.createShaderModule({
+    setShaderModule(code){
+        const module = this.client.device.createShaderModule({
             label:`${this.name} shader module`,
             code:code
         });
@@ -74,8 +86,8 @@ export class WebGpuBuilder{
         this.commandBuffer = buffer
     }
 
-    run(client) {
-        client.device.queue.submit([this.commandBuffer])
+    run() {
+        this.client.device.queue.submit([this.commandBuffer])
     }
 }
 

@@ -1,13 +1,7 @@
 import { getClient, Client, WebGpuBuilder } from "/static/index.js";
 
-
-async function main(){
-    const TableApp = new WebGpuBuilder("Table")
-    const client = await getClient();
-    console.log(client)
-    console.log(client.canvas)
-    const code = 
-    `
+const code = 
+`
     struct output {
         @builtin(position) position : vec4f,
     };
@@ -28,13 +22,11 @@ async function main(){
     fn fs() -> @location(0) vec4f {
         return vec4f(1.0, 0.0, 0.0, 1.0);
     }
-    `
-    TableApp.resizeCanvas(client);
-    TableApp.setShaderModule(client, code)
-    TableApp.setPipeline(client);
+`
 
-    TableApp.renderPassDescriptor.colorAttachments[0].view = client.context.getCurrentTexture().createView();
-    const encoder = client.device.createCommandEncoder({
+function encodeCommands(TableApp){
+    
+    const encoder = TableApp.client.device.createCommandEncoder({
         label:"table encoder",
         });
     const pass = encoder.beginRenderPass(TableApp.renderPassDescriptor);
@@ -43,9 +35,23 @@ async function main(){
     pass.end()
     const commands = encoder.finish();
 
-    TableApp.commandBuffer = commands
+    return commands;
+}
 
-    TableApp.run(client);
+async function main(){
+   
+    const client = await getClient();
+    const TableApp = new WebGpuBuilder("Table", client)
+
+    console.log(client)
+    console.log(client.canvas)
+    
+    TableApp.resizeCanvas();
+    TableApp.setShaderModule(code)
+    TableApp.setPipeline();
+    TableApp.renderPassDescriptor.colorAttachments[0].view = client.context.getCurrentTexture().createView();
+    TableApp.commandBuffer = encodeCommands(TableApp)
+    TableApp.run();
 }
 
 main()
