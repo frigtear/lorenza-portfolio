@@ -1,7 +1,8 @@
-
 {% load static %}
 <body>
-    <script type="module" src="{% static 'index.js' %}"> </script>
+   <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/gl-matrix-min.min.js"> </script>
+   <script type="module" src="{% static 'index.js' %}"> </script>
+   <script type="module" src="{% static 'parser.js' %}"> </script>
     {% block tableScript %}
     {% endblock %}
     <div id="canvas-container">

@@ -1,4 +1,5 @@
-import { getClient, Client, WebGpuBuilder } from "/static/index.js";
+import { getClient, Client, WebGpuApp } from "/static/index.js";
+import {Model, Vertex} from "/static/parser.js"
 
 const code = 
 `
@@ -39,9 +40,14 @@ function encodeCommands(TableApp){
 }
 
 async function main(){
-   
+    const model = new Model("/static/models/canvas.obj")
+    await model.loadFromFile();
+    console.log(model.vertices)
+    console.log(model.vertices[0])
+    console.log(model.normals);
+    console.log(model.textures);
     const client = await getClient();
-    const TableApp = new WebGpuBuilder("Table", client)
+    const TableApp = new WebGpuApp("Table", client)
 
     console.log(client)
     console.log(client.canvas)

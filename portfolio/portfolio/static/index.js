@@ -1,11 +1,16 @@
-// Javascript shared with every app
+//import { Model } from "/static/parser.js"
+
+
+// Generic webgpu app, javascript that is loaded into every app
+
 const notSupportedMessage = "this website is not supported by this browser, please reload this site on another browser" 
+
 
 function fail(){
     document.body.innerHTML = ''
     alert(notSupportedMessage)
-    
 }
+
 
 export class Client {
     constructor(canvas, device, context, format){
@@ -16,7 +21,9 @@ export class Client {
     }
 }
 
-export class WebGpuBuilder{
+
+export class WebGpuApp{
+
     clearColor;
     pipeline;
     shaderModule;
@@ -24,6 +31,7 @@ export class WebGpuBuilder{
     renderPassDescriptor; 
     appName;
     client;
+
 
     constructor(name, client) {
         this.clearColor = [0.3, 0.3, 0.3, 1.0] // GRAY
@@ -39,14 +47,12 @@ export class WebGpuBuilder{
                 }
             ]
         }
-        
-     
     }
+
 
     resizeCanvas(){
         this.client.canvas.width = window.innerWidth
         this.client.canvas.height = window.innerHeight
-        
         const dpr = window.devicePixelRatio || 1;
         const width = this.client.canvas.clientWidth;
         const height = this.client.canvas.clientHeight;
@@ -54,8 +60,8 @@ export class WebGpuBuilder{
             this.client.canvas.width = width;
             this.client.canvas.height = height;
         }
-        
     }
+
 
     setPipeline(){
         const renderPipeline = this.client.device.createRenderPipeline({
@@ -74,6 +80,7 @@ export class WebGpuBuilder{
         this.pipeline = renderPipeline
     }
 
+
     setShaderModule(code){
         const module = this.client.device.createShaderModule({
             label:`${this.name} shader module`,
@@ -82,14 +89,12 @@ export class WebGpuBuilder{
         this.shaderModule = module
     }
 
-    setCommandBuffer(buffer){
-        this.commandBuffer = buffer
-    }
 
     run() {
         this.client.device.queue.submit([this.commandBuffer])
     }
 }
+
 
 export async function getClient(){
 
@@ -103,6 +108,7 @@ export async function getClient(){
     const canvas = document.querySelector('#main')
     const context = canvas.getContext('webgpu')
     const presentationFormat = navigator.gpu.getPreferredCanvasFormat()
+
     context.configure({
         device,
         format:presentationFormat
