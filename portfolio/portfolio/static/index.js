@@ -31,8 +31,8 @@ export class WebGpuApp{
     renderPassDescriptor; 
     appName;
     client;
-
-
+    models = {}; 
+    
     constructor(name, client) {
         this.clearColor = [0.3, 0.3, 0.3, 1.0] // GRAY
         this.appName = name;

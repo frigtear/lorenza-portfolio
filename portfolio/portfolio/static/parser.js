@@ -11,11 +11,14 @@ export class Model {
     data;
     pathToModel;
     vertices = [];
+    verticesSize;
     normals = []; 
+    normalsSize;
     textures = [];
+    texturesSize;
+    totalSize;
     faces = [];
     
-
     constructor(path) {
         this.pathToModel = path;
     }
@@ -46,7 +49,7 @@ export class Model {
             })
             switch(values[0]){
                 case 'v':
-                    this.vertices.push(glMatrix.vec3.fromValues(values[1], values[2], values[3]))
+                    this.vertices.push(glMatrix.vec4.fromValues(values[1], values[2], values[3], 1))
                     break
                 case 'vn':
                     this.normals.push(glMatrix.vec3.fromValues(values[1], values[2], values[3]))
@@ -59,9 +62,24 @@ export class Model {
                     break
             }
         });
+        this.verticesSize = this.vertices.length * 4 * 4 * 2
+        console.log("SIZE OF BUFFER = " + this.verticesSize)
+        this.normalsSize = this.normals.length * 4
+        this.texturesSize = this.textures.length * 4
+        this.facesSize = this.faces.length * 4
+        this.totalSize = this.verticesSize + this.normalsSize + this.texturesSize + this.facesSize
     }
 
-    s
-
-
+    orthogonalize(){
+        let orthoMatrix = glMatrix.mat4.create();
+        let orthogonalizedVertices = []
+        glMatrix.mat4.ortho(orthoMatrix, -2, 1, -2, 1, -2, 1)
+        this.vertices.forEach(vertex => {
+            let temp = glMatrix.vec4.create()
+            glMatrix.vec4.transformMat4(temp, vertex, orthoMatrix)
+            orthogonalizedVertices.push(temp);
+        })
+        this.vertices = orthogonalizedVertices;
+        console.log(this.vertices)
+    }
 }
