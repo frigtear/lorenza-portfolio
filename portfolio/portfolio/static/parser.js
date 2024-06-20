@@ -1,11 +1,11 @@
 // Parsing waveform .obj files
+import { Client } from "/static/index.js";
 
 export class Vertex {
     coordinates;
     norms;
     textureCoordinates;
 }
-
 
 export class Model {
     data;
@@ -70,10 +70,15 @@ export class Model {
         this.totalSize = this.verticesSize + this.normalsSize + this.texturesSize + this.facesSize
     }
 
-    orthogonalize(){
+    orthogonalize(width, height){
+        const near = 0.1
+        const far = 10000111
+        width /= 2
+        height /= 2
+        
         let orthoMatrix = glMatrix.mat4.create();
         let orthogonalizedVertices = []
-        glMatrix.mat4.ortho(orthoMatrix, -2, 1, -2, 1, -2, 1)
+        glMatrix.mat4.ortho(orthoMatrix, -width, width, -height, height, near, far)
         this.vertices.forEach(vertex => {
             let temp = glMatrix.vec4.create()
             glMatrix.vec4.transformMat4(temp, vertex, orthoMatrix)

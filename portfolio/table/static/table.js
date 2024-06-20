@@ -53,7 +53,7 @@ function encodeCommands(TableApp, buffer, model, bindGroup){
         });
     const pass = encoder.beginRenderPass(TableApp.renderPassDescriptor);
     pass.setPipeline(TableApp.pipeline);
-    model.orthogonalize()
+    model.orthogonalize(TableApp.client.canvas.width, TableApp.client.canvas.height)
     let verticesArray = [];
     for (let vec of model.vertices) {
         verticesArray.push(vec[0], vec[1], vec[2]);
