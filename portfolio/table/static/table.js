@@ -71,11 +71,25 @@ function encodeCommands(TableApp, buffer, model, bindGroup){
 
 
 async function main(){
-    const model = new Model("/static/models/bunny.obj")
-    await model.loadFromFile()
+    const Bunny = new Model("/static/models/bunny.obj")
+    await Bunny.loadFromFile()
+    finalValues = Bunny.finalBufferValues
+
+    verticesToWrite = new Float32Array(finalValues.vertices)
+    facesToWrite = new Uint16Array(finalValues.faces)
+
     const client = await getClient()
     const TableApp = new WebGpuApp("Table", client)
+
     TableApp.resizeCanvas()
+
+    bunnyTexBuff = TableApp.addVertexBuffer("Bunny Vertex Buffer", vertices.byteLength).buffer
+    bunnyDexBuff = TableApp.addIndexBuffer("Bunny Index Buffer", vertices.byteLength).buffer
+
+    TableApp.addIndexBuffer("Bunny Vertex index buffer", vertices.byteLength)
+
+
+
     TableApp.setShaderModule(code)
     const canvasVertexBuffer = createStorageBuffer(TableApp, model.verticesSize)
     TableApp.setPipeline()

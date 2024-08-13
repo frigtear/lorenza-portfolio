@@ -32,7 +32,8 @@ export class WebGpuApp{
     appName;
     client;
     models = {}; 
-    buffers = {};
+    buffers = [];
+    toWriteBuff = [];
     
     constructor(name, client) {
         this.clearColor = [0.3, 0.3, 0.3, 1.0] // GRAY
@@ -104,6 +105,8 @@ export class WebGpuApp{
         }
 
         this.buffers.push(bufferInfo)
+
+        return bufferInfo
     }
 
     addVertexBuffer(name, size){
@@ -120,6 +123,8 @@ export class WebGpuApp{
         }
 
         this.buffers.push(bufferInfo)
+
+        return bufferInfo
     }
 
     addIndexBuffer(name, size){
@@ -136,6 +141,13 @@ export class WebGpuApp{
         }
 
         this.buffers.push(bufferInfo)
+
+        return bufferInfo
+    }
+
+    
+    getBuffer(name){
+        return this.buffers.filter(buffer => buffer.name == name);
     }
 
 
