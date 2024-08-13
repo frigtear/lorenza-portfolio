@@ -18,12 +18,14 @@ export class Model {
     texturesSize;
     totalSize;
     faces = [];
+    triangles = [];
+
+    finalBufferValues = null;
     
     constructor(path) {
         this.pathToModel = path;
     }
 
-    
     async loadFromFile() {
 
         await fetch(this.pathToModel)
@@ -49,7 +51,7 @@ export class Model {
             })
             switch(values[0]){
                 case 'v':
-                    this.vertices.push(glMatrix.vec4.fromValues(values[1], values[2], values[3], 1))
+                    this.vertices.push(...[values[1], values[2], values[3], 1])
                     break
                 case 'vn':
                     this.normals.push(glMatrix.vec3.fromValues(values[1], values[2], values[3]))
@@ -58,21 +60,21 @@ export class Model {
                     this.textures.push(glMatrix.vec2.fromValues(values[1], values[2]))
                     break
                 case 'f':
-                    this.faces.push(glMatrix.vec4.fromValues(values[1], values[2], values[3], values[4]))
+                    this.faces.push(...values.slice(1))
                     break
             }
         });
-        this.verticesSize = this.vertices.length * 4 * 4 * 2
-        console.log("SIZE OF BUFFER = " + this.verticesSize)
-        this.normalsSize = this.normals.length * 4
-        this.texturesSize = this.textures.length * 4
-        this.facesSize = this.faces.length * 4
-        this.totalSize = this.verticesSize + this.normalsSize + this.texturesSize + this.facesSize
-    }
 
+       this.finalBufferValues = {
+        vertices : Float32Array(this.vertices),
+        faces : UInt16Array(this.faces.flat()),
+       }
+
+    }
+/*
     orthogonalize(width, height){
         const near = 0.1
-        const far = 10000111
+        const far = 1000
         width /= 2
         height /= 2
         
@@ -87,4 +89,5 @@ export class Model {
         this.vertices = orthogonalizedVertices;
         console.log(this.vertices)
     }
+    */
 }

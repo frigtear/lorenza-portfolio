@@ -33,7 +33,6 @@ function createStorageBuffer(TableApp, size){
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     }) 
     return canvasVertexBuffer
-
 }
 
 
@@ -72,7 +71,7 @@ function encodeCommands(TableApp, buffer, model, bindGroup){
 
 
 async function main(){
-    const model = new Model("/static/models/canvas.obj")
+    const model = new Model("/static/models/bunny.obj")
     await model.loadFromFile()
     const client = await getClient()
     const TableApp = new WebGpuApp("Table", client)

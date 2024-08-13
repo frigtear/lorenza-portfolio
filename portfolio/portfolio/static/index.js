@@ -32,6 +32,7 @@ export class WebGpuApp{
     appName;
     client;
     models = {}; 
+    buffers = {};
     
     constructor(name, client) {
         this.clearColor = [0.3, 0.3, 0.3, 1.0] // GRAY
@@ -87,6 +88,54 @@ export class WebGpuApp{
             code:code
         });
         this.shaderModule = module
+    }
+
+    addStorageBuffer(name, size){
+        const buffer = TableApp.client.device.createBuffer({
+            label:name,
+            size:size,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        }) 
+
+        bufferInfo  = {
+            type:'storage',
+            name:name,
+            buffer:buffer
+        }
+
+        this.buffers.push(bufferInfo)
+    }
+
+    addVertexBuffer(name, size){
+        const buffer = TableApp.client.device.createBuffer({
+            label:name,
+            size:size,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+        }) 
+
+        bufferInfo  = {
+            type:'vertex',
+            name:name,
+            buffer:buffer
+        }
+
+        this.buffers.push(bufferInfo)
+    }
+
+    addIndexBuffer(name, size){
+        const buffer = TableApp.client.device.createBuffer({
+            label:name,
+            size:size,
+            usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+        }) 
+
+        bufferInfo  = {
+            type:'index',
+            name:name,
+            buffer:buffer
+        }
+
+        this.buffers.push(bufferInfo)
     }
 
 
