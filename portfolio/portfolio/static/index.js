@@ -1,7 +1,7 @@
 //import { Model } from "/static/parser.js"
 
 
-// Generic webgpu app, javascript that is loaded into every app
+// A Generic webgpu application, that is loaded into every website page
 
 const notSupportedMessage = "this website is not supported by this browser, please reload this site on another browser" 
 
@@ -33,7 +33,8 @@ export class WebGpuApp{
     client;
     models = {}; 
     buffers = [];
-    toWriteBuff = [];
+    toWriteToBuff = [];
+    bindGroups = [];
     
     constructor(name, client) {
         this.clearColor = [0.3, 0.3, 0.3, 1.0] // GRAY
@@ -92,16 +93,17 @@ export class WebGpuApp{
     }
 
     addStorageBuffer(name, size){
-        const buffer = TableApp.client.device.createBuffer({
+        const buffer = this.client.device.createBuffer({
             label:name,
             size:size,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
         }) 
 
-        bufferInfo  = {
+        const bufferInfo  = {
             type:'storage',
             name:name,
-            buffer:buffer
+            buffer:buffer,
+            index:this.buffers.length
         }
 
         this.buffers.push(bufferInfo)
@@ -110,16 +112,17 @@ export class WebGpuApp{
     }
 
     addVertexBuffer(name, size){
-        const buffer = TableApp.client.device.createBuffer({
+        const buffer = this.client.device.createBuffer({
             label:name,
             size:size,
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
         }) 
 
-        bufferInfo  = {
+        const bufferInfo  = {
             type:'vertex',
             name:name,
-            buffer:buffer
+            buffer:buffer,
+            index:this.buffers.length
         }
 
         this.buffers.push(bufferInfo)
@@ -128,16 +131,17 @@ export class WebGpuApp{
     }
 
     addIndexBuffer(name, size){
-        const buffer = TableApp.client.device.createBuffer({
+        const buffer = this.client.device.createBuffer({
             label:name,
             size:size,
             usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
         }) 
 
-        bufferInfo  = {
+        const bufferInfo  = {
             type:'index',
             name:name,
-            buffer:buffer
+            buffer:buffer,
+            index:this.buffers.length
         }
 
         this.buffers.push(bufferInfo)
@@ -146,6 +150,40 @@ export class WebGpuApp{
     }
 
     
+    addBindGroup(name, id, ...resources){
+
+        const entries = resources.map((resource, index) => ({
+            binding: index,
+            resource: resource
+        }));    
+
+        const bindGroup = TableApp.client.device.createBindGroup({
+            label:name,
+            layout:this.pipeline.getBindGroupLayout(0),
+            entries: entries
+        })
+        
+        const bindGroupInfo = {
+            name:name,
+            id:id,
+            bindGroup:bindGroup,
+            index:this.bindGroups.length
+        }
+
+        this.bindGroups.push(bindGroup)
+
+        return bindGroupInfo
+    }
+
+    async writeBuffers(){
+        for (const buff of TableApp.toWriteToBuff) {
+            const buffer = TableApp.buffers[buff.index];
+            await buffer.mapAsync(GPUMapMode.WRITE);
+            new Float32Array(buffer.getMappedRange()).set(buff.data);
+            buffer.unmap();
+        }
+    }
+
     getBuffer(name){
         return this.buffers.filter(buffer => buffer.name == name);
     }

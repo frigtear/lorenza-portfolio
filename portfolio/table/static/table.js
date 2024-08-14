@@ -26,33 +26,20 @@ const code =
     }
 `
 
-function createStorageBuffer(TableApp, size){
-    const canvasVertexBuffer = TableApp.client.device.createBuffer({
-        label:`table canvas storage buffer`,
-        size:size,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
-    }) 
-    return canvasVertexBuffer
-}
 
 
-function createBindGroup(TableApp, storageBuffer){
-    const bindgroup0 = TableApp.client.device.createBindGroup({
-        layout:TableApp.pipeline.getBindGroupLayout(0),
-        entries: [{binding:0, resource: {buffer : storageBuffer}}]
-    })
 
-   return bindgroup0
-}
-
-
-function encodeCommands(TableApp, buffer, model, bindGroup){
+function encodeCommands(TableApp, model){
     const encoder = TableApp.client.device.createCommandEncoder({
         label:"table encoder",
         });
-    const pass = encoder.beginRenderPass(TableApp.renderPassDescriptor);
-    pass.setPipeline(TableApp.pipeline);
-    model.orthogonalize(TableApp.client.canvas.width, TableApp.client.canvas.height)
+
+    const renderPass = encoder.beginRenderPass(TableApp.renderPassDescriptor);
+    renderPass.setPipeline(TableApp.pipeline);
+    
+
+   
+/*
     let verticesArray = [];
     for (let vec of model.vertices) {
         verticesArray.push(vec[0], vec[1], vec[2]);
@@ -61,9 +48,11 @@ function encodeCommands(TableApp, buffer, model, bindGroup){
     let verticesTypedArray = new Float32Array(verticesArray);
     const size = verticesTypedArray.length * 4
     TableApp.client.device.queue.writeBuffer(buffer, 0, verticesTypedArray)
-    pass.setBindGroup(0, bindGroup);
-    pass.draw(model.vertices.length)
-    pass.end()
+    */
+
+    renderPass.setBindGroup(0, TableApp.bindGroups[0]);
+    renderPass.draw(model.finalBufferValues.vertices.length)
+    renderPass.end()
     const commands = encoder.finish();
 
     return commands;
@@ -83,14 +72,26 @@ async function main(){
 
     TableApp.resizeCanvas()
 
-    bunnyTexBuff = TableApp.addVertexBuffer("Bunny Vertex Buffer", vertices.byteLength).buffer
-    bunnyDexBuff = TableApp.addIndexBuffer("Bunny Index Buffer", vertices.byteLength).buffer
+    const bunnyTexBuff = TableApp.addVertexBuffer("Bunny Vertex Buffer", vertices.byteLength).buffer // index 0
+    const bunnyDexBuff = TableApp.addIndexBuffer("Bunny Index Buffer", vertices.byteLength).buffer // index 1
 
-    TableApp.addIndexBuffer("Bunny Vertex index buffer", vertices.byteLength)
+    const texToWrite = {
+        index:bunnyTexBuff.index,
+        data:verticesToWrite
+    }
 
+    const dexToWrite = {
+        index:bunnyDexBuff.index,
+        data:facesToWrite
+    }
 
+    TableApp.toWriteToBuff.push(texToWrite)
+    TableApp.toWriteToBuff.push(dexToWrite)
+
+    TableApp.addBindGroup("Bunny bind group", 0, [bunnyTexBuff, bunnyDexBuff])
 
     TableApp.setShaderModule(code)
+
     const canvasVertexBuffer = createStorageBuffer(TableApp, model.verticesSize)
     TableApp.setPipeline()
     const mainBindGroup = createBindGroup(TableApp, canvasVertexBuffer)
