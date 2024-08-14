@@ -71,8 +71,8 @@ export class Model {
         });
 
        this.finalBufferValues = {
-        vertices : Float32Array(this.vertices),
-        faces : UInt16Array(this.faces.flat()),
+        vertices : new Float32Array(this.vertices),
+        faces : new Uint16Array(this.faces.flat()),
        }
 
     }
@@ -98,12 +98,12 @@ export class Model {
 
     createMatrices(){
         
-        glMatrix.vec3.fromValues(eye, 0, 0, 1)
-        glMatrix.vec3.fromValues(center, 0, 0 ,0)
-        glMatrix.vec3.fromValues(up, 0, 1, 0)
+        const eye = glMatrix.vec3.fromValues(0, 0, 1)
+        const center = glMatrix.vec3.fromValues(0, 0 ,0)
+        const up = glMatrix.vec3.fromValues(0, 1, 0)
 
         glMatrix.mat4.lookAt(view, eye, center, up)
-        glMatrix.mat4.perspective(perpective, -1, 1, -1, 1, 0.1, 1000)
+        glMatrix.mat4.perspective(perspective, -1, 1, -1, 1, 0.1, 1000)
 
         glMatrix.mat4.multiply(mvp, view, perspective)
 
