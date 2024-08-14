@@ -20,6 +20,11 @@ export class Model {
     faces = [];
     triangles = [];
 
+   
+    matrix = null 
+
+   
+
     finalBufferValues = null;
     
     constructor(path) {
@@ -90,4 +95,29 @@ export class Model {
         console.log(this.vertices)
     }
     */
+
+    createMatrices(){
+        
+        glMatrix.vec3.fromValues(eye, 0, 0, 1)
+        glMatrix.vec3.fromValues(center, 0, 0 ,0)
+        glMatrix.vec3.fromValues(up, 0, 1, 0)
+
+        glMatrix.mat4.lookAt(view, eye, center, up)
+        glMatrix.mat4.perspective(perpective, -1, 1, -1, 1, 0.1, 1000)
+
+        glMatrix.mat4.multiply(mvp, view, perspective)
+
+        const matrixValues = {
+            matPerspective: perspective,
+            matView: view,
+            matModel: null,
+            matMvp: mvp,
+            finalMvpValues: new Float32Array(mvp)
+        }
+       
+        this.matrix = matrixValues
+
+        return matrixValues
+    }
+    
 }

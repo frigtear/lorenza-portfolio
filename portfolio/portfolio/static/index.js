@@ -66,24 +66,6 @@ export class WebGpuApp{
     }
 
 
-    setPipeline(){
-        const renderPipeline = this.client.device.createRenderPipeline({
-            label:`${this.name} pipeline`,
-            layout:'auto',
-            vertex:{
-                module:this.shaderModule,
-                entryPoint:'vs'
-            },
-            fragment:{
-                module:this.shaderModule,
-                entryPoint:'fs',
-                targets:[{format:this.client.format}]
-            }
-        })
-        this.pipeline = renderPipeline
-    }
-
-
     setShaderModule(code){
         const module = this.client.device.createShaderModule({
             label:`${this.name} shader module`,
@@ -149,15 +131,34 @@ export class WebGpuApp{
         return bufferInfo
     }
 
+    addUniformBuffer(name, size){
+        const buffer = this.client.device.createBuffer({
+            label:name,
+            size:size,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        }) 
+
+        const bufferInfo  = {
+            type:'uniform',
+            name:name,
+            buffer:buffer,
+            index:this.buffers.length
+        }
+
+        this.buffers.push(bufferInfo)
+
+        return bufferInfo
+    }
+
     
-    addBindGroup(name, id, ...resources){
+    addBindGroup(name, ...resources){
 
         const entries = resources.map((resource, index) => ({
             binding: index,
             resource: resource
         }));    
 
-        const bindGroup = TableApp.client.device.createBindGroup({
+        const bindGroup = this.client.device.createBindGroup({
             label:name,
             layout:this.pipeline.getBindGroupLayout(0),
             entries: entries
@@ -165,7 +166,6 @@ export class WebGpuApp{
         
         const bindGroupInfo = {
             name:name,
-            id:id,
             bindGroup:bindGroup,
             index:this.bindGroups.length
         }
@@ -175,12 +175,10 @@ export class WebGpuApp{
         return bindGroupInfo
     }
 
-    async writeBuffers(){
-        for (const buff of TableApp.toWriteToBuff) {
-            const buffer = TableApp.buffers[buff.index];
-            await buffer.mapAsync(GPUMapMode.WRITE);
-            new Float32Array(buffer.getMappedRange()).set(buff.data);
-            buffer.unmap();
+    writeBuffers(){
+        for (const buff of this.toWriteToBuff) {
+            const buffer = this.buffers[buff.index];
+            this.client.device.queue.writeBuffer(buffer, 0, this.toWriteToBuff[buff.index])
         }
     }
 
