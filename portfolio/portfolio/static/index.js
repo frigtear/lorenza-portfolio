@@ -1,7 +1,7 @@
 //import { Model } from "/static/parser.js"
 
 
-// Generic webgpu app, javascript that is loaded into every app
+// A Generic webgpu application, that is loaded into every website page
 
 const notSupportedMessage = "this website is not supported by this browser, please reload this site on another browser" 
 
@@ -31,8 +31,11 @@ export class WebGpuApp{
     renderPassDescriptor; 
     appName;
     client;
-
-
+    models = {}; 
+    buffers = [];
+    toWriteToBuff = [];
+    bindGroups = [];
+    
     constructor(name, client) {
         this.clearColor = [0.3, 0.3, 0.3, 1.0] // GRAY
         this.appName = name;
@@ -63,30 +66,134 @@ export class WebGpuApp{
     }
 
 
-    setPipeline(){
-        const renderPipeline = this.client.device.createRenderPipeline({
-            label:`${this.name} pipeline`,
-            layout:'auto',
-            vertex:{
-                module:this.shaderModule,
-                entryPoint:'vs'
-            },
-            fragment:{
-                module:this.shaderModule,
-                entryPoint:'fs',
-                targets:[{format:this.client.format}]
-            }
-        })
-        this.pipeline = renderPipeline
-    }
-
-
     setShaderModule(code){
         const module = this.client.device.createShaderModule({
             label:`${this.name} shader module`,
             code:code
         });
         this.shaderModule = module
+    }
+
+    addStorageBuffer(name, size){
+        const buffer = this.client.device.createBuffer({
+            label:name,
+            size:size,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        }) 
+
+        const bufferInfo  = {
+            type:'storage',
+            name:name,
+            buffer:buffer,
+            index:this.buffers.length
+        }
+
+        this.buffers.push(bufferInfo)
+
+        return bufferInfo
+    }
+
+    addVertexBuffer(name, size){
+        const buffer = this.client.device.createBuffer({
+            label:name,
+            size:size,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+        }) 
+
+        const bufferInfo  = {
+            type:'vertex',
+            name:name,
+            buffer:buffer,
+            index:this.buffers.length
+        }
+
+        this.buffers.push(bufferInfo)
+
+        return bufferInfo
+    }
+
+    addIndexBuffer(name, size){
+        const buffer = this.client.device.createBuffer({
+            label:name,
+            size:size,
+            usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+        }) 
+
+        const bufferInfo  = {
+            type:'index',
+            name:name,
+            buffer:buffer,
+            index:this.buffers.length
+        }
+
+        this.buffers.push(bufferInfo)
+
+        return bufferInfo
+    }
+
+    addUniformBuffer(name, size){
+        const buffer = this.client.device.createBuffer({
+            label:name,
+            size:size,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        }) 
+
+        const bufferInfo  = {
+            type:'uniform',
+            name:name,
+            buffer:buffer,
+            index:this.buffers.length
+        }
+
+        this.buffers.push(bufferInfo)
+
+        return bufferInfo
+    }
+
+    
+    addBindGroup(name, resource){
+
+      /*  const entries = resources.map((resource, index) => ({
+            binding: index,
+            resource: resource
+        }));   
+        */ 
+
+        const bindGroup = this.client.device.createBindGroup({
+            label:name,
+            layout:this.pipeline.getBindGroupLayout(0),
+            entries: [
+                {
+                    binding: 0, // Binding index matching the layout
+                    resource: {
+                        buffer: resource, // The uniform buffer to bind
+                    },
+                },
+            ],
+        })
+        
+        const bindGroupInfo = {
+            name:name,
+            bindGroup:bindGroup,
+            index:this.bindGroups.length
+        }
+
+        this.bindGroups.push(bindGroup)
+
+        return bindGroupInfo
+    }
+
+    writeBuffers(){
+        for (const buff of this.toWriteToBuff) {
+            const buffer = this.buffers[buff.index].buffer;
+            console.log(this.toWriteToBuff[0].data)
+            console.log(buffer)
+            this.client.device.queue.writeBuffer(buffer, 0, this.toWriteToBuff[buff.index].data)
+        }
+    }
+
+    getBuffer(name){
+        return this.buffers.filter(buffer => buffer.name == name);
     }
 
 
@@ -116,4 +223,3 @@ export async function getClient(){
 
     return new Client(canvas, device, context, presentationFormat);
 }
-
