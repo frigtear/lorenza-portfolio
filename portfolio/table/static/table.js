@@ -8,15 +8,14 @@ const code =
     }
     
     struct Vertex {
-        @location(0) position: vec4f
+        @location(0) position: vec4f,
     };
 
-    @group(0) @binding(0) var<uniform> uniform : Uniform;
+    @group(0) @binding(0) var<uniform> uniformData : Uniform;
 
     @vertex
     fn vs(vertex: Vertex) -> @builtin(position) vec4f {
-   
-        var result: vec4f = uniform.mvp * vertex.position;
+        var result: vec4f = uniformData.mvp * vertex.position;
         return result;
     }
 
@@ -49,10 +48,11 @@ function encodeCommands(TableApp, model){
 
 async function main(){
 
-   
+    const client = await getClient()
+
     const Bunny = new Model("/static/models/bunny.obj")
     await Bunny.loadFromFile()
-    const formBuffInfo = Bunny.createMatrices()
+    const formBuffInfo = Bunny.createMatrices(client.canvas)
 
     const finalValues = Bunny.finalBufferValues
 
@@ -60,8 +60,6 @@ async function main(){
     const facesToWrite = new Uint16Array(finalValues.faces)
     const mvpToWrite = formBuffInfo.finalMvpValues;
 
-
-    const client = await getClient()
 
     const TableApp = new WebGpuApp("Table", client)
 
@@ -90,6 +88,7 @@ async function main(){
 
     })
 
+    TableApp.pipeline = tablePipeline
 
     TableApp.resizeCanvas()
 
@@ -118,14 +117,10 @@ async function main(){
 
     TableApp.addBindGroup("uniform MVP matrix bind group", bunnyFormBuff.buffer)
 
-   
-
-    TableApp.pipeline = tablePipeline
     TableApp.renderPassDescriptor.colorAttachments[0].view = client.context.getCurrentTexture().createView();
 
-    TableApp.commandBuffer = encodeCommands(TableApp)
+    TableApp.commandBuffer = encodeCommands(TableApp, Bunny)
     TableApp.run();
 }
 
 main()
-    

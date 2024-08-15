@@ -96,16 +96,24 @@ export class Model {
     }
     */
 
-    createMatrices(){
-        
-        const eye = glMatrix.vec3.fromValues(0, 0, 1)
+    createMatrices(canvas){
+        const view = glMatrix.mat4.create();
+        const perspective = glMatrix.mat4.create();
+        const mvp = glMatrix.mat4.create();
+
+        const eye = glMatrix.vec3.fromValues(0, 5, 5)
         const center = glMatrix.vec3.fromValues(0, 0 ,0)
         const up = glMatrix.vec3.fromValues(0, 1, 0)
 
-        glMatrix.mat4.lookAt(view, eye, center, up)
-        glMatrix.mat4.perspective(perspective, -1, 1, -1, 1, 0.1, 1000)
+        const fovy = Math.PI / 4; 
+        const aspect = canvas.width / canvas.height; 
+        const near = 0.1;
+        const far = 1000;
 
-        glMatrix.mat4.multiply(mvp, view, perspective)
+        glMatrix.mat4.lookAt(view, eye, center, up)
+        glMatrix.mat4.perspective(perspective, fovy, aspect, near, far);
+
+        glMatrix.mat4.multiply(mvp, perspective, view)
 
         const matrixValues = {
             matPerspective: perspective,

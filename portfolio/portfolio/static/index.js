@@ -151,17 +151,25 @@ export class WebGpuApp{
     }
 
     
-    addBindGroup(name, ...resources){
+    addBindGroup(name, resource){
 
-        const entries = resources.map((resource, index) => ({
+      /*  const entries = resources.map((resource, index) => ({
             binding: index,
             resource: resource
-        }));    
+        }));   
+        */ 
 
         const bindGroup = this.client.device.createBindGroup({
             label:name,
             layout:this.pipeline.getBindGroupLayout(0),
-            entries: entries
+            entries: [
+                {
+                    binding: 0, // Binding index matching the layout
+                    resource: {
+                        buffer: resource, // The uniform buffer to bind
+                    },
+                },
+            ],
         })
         
         const bindGroupInfo = {
@@ -177,8 +185,10 @@ export class WebGpuApp{
 
     writeBuffers(){
         for (const buff of this.toWriteToBuff) {
-            const buffer = this.buffers[buff.index];
-            this.client.device.queue.writeBuffer(buffer, 0, this.toWriteToBuff[buff.index])
+            const buffer = this.buffers[buff.index].buffer;
+            console.log(this.toWriteToBuff[0].data)
+            console.log(buffer)
+            this.client.device.queue.writeBuffer(buffer, 0, this.toWriteToBuff[buff.index].data)
         }
     }
 
@@ -213,4 +223,3 @@ export async function getClient(){
 
     return new Client(canvas, device, context, presentationFormat);
 }
-
