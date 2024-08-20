@@ -1,5 +1,6 @@
 // Parsing waveform .obj files
 import { Client } from "/static/index.js";
+//import {glMatrix} from "/static/glmatrix.js"
 
 export class Vertex {
     coordinates;
@@ -96,13 +97,12 @@ export class Model {
     }
     */
 
-    createMatrices(canvas){
+    createMatrices(canvas, eye, center){
         const view = glMatrix.mat4.create();
         const perspective = glMatrix.mat4.create();
         const mvp = glMatrix.mat4.create();
 
-        const eye = glMatrix.vec3.fromValues(0, 5, 5)
-        const center = glMatrix.vec3.fromValues(0, 0 ,0)
+    
         const up = glMatrix.vec3.fromValues(0, 1, 0)
 
         const fovy = Math.PI / 4; 

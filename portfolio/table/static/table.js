@@ -11,17 +11,34 @@ const code =
         @location(0) position: vec4f,
     };
 
+    struct VertexOutput {
+        @builtin(position) position : vec4f,
+        @location(0) color : vec4f,
+    }
+
     @group(0) @binding(0) var<uniform> uniformData : Uniform;
 
     @vertex
-    fn vs(vertex: Vertex) -> @builtin(position) vec4f {
+    fn vs(vertex: Vertex, @builtin(vertex_index) index : u32) -> VertexOutput {
         var result: vec4f = uniformData.mvp * vertex.position;
-        return result;
+
+        var colors = array<vec4f, 3>(
+          vec4f(1, 0, 0, 1), // red
+          vec4f(0, 1, 0, 1), // green
+          vec4f(0, 0, 1, 1), // blue
+        );
+
+        var out : VertexOutput;
+
+        out.position = result;
+        out.color = colors[index % 3];
+        return out;
+       
     }
 
     @fragment
-    fn fs() -> @location(0) vec4f {
-        return vec4f(1.0, 0.0, 0.0, 1.0);
+    fn fs(vertexOut : VertexOutput) -> @location(0) vec4f {
+        return vertexOut.color;
     }
 `
 
@@ -50,9 +67,13 @@ async function main(){
 
     const client = await getClient()
 
-    const Bunny = new Model("/static/models/bunny.obj")
+    const Bunny = new Model("/static/models/cone.obj")
     await Bunny.loadFromFile()
-    const formBuffInfo = Bunny.createMatrices(client.canvas)
+
+    const eye = glMatrix.vec3.fromValues(-10, 5, 0)
+    const center = glMatrix.vec3.fromValues(0, 0 ,0)
+
+    const formBuffInfo = Bunny.createMatrices(client.canvas, eye, center)
 
     const finalValues = Bunny.finalBufferValues
 

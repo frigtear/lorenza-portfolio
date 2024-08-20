@@ -1,6 +1,7 @@
 {% load static %}
 <body>
    <script src="https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/gl-matrix-min.min.js"> </script>
+   <script type="module" src="{% static 'glmatrix.js' %}"> </script>
    <script type="module" src="{% static 'index.js' %}"> </script>
    <script type="module" src="{% static 'parser.js' %}"> </script>
     {% block tableScript %}

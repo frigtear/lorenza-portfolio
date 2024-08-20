@@ -8,3 +8,5 @@ static_root
 .DS_Store
 portfolio/node_modules
 portfolio/portfolio/static/bundle.js
+venv
+no-wifi
