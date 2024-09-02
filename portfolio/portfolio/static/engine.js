@@ -22,7 +22,7 @@ export class Client {
 }
 
 
-export class WebGpuApp{
+export class Engine{
 
     clearColor;
     pipeline;
@@ -33,7 +33,6 @@ export class WebGpuApp{
     client;
     models = {}; 
     buffers = [];
-    toWriteToBuff = [];
     bindGroups = [];
     
     constructor(name, client) {
@@ -65,7 +64,6 @@ export class WebGpuApp{
         }
     }
 
-
     setShaderModule(code){
         const module = this.client.device.createShaderModule({
             label:`${this.name} shader module`,
@@ -74,90 +72,45 @@ export class WebGpuApp{
         this.shaderModule = module
     }
 
-    addStorageBuffer(name, size){
+    
+    addBuffer(name, size, type){
+    
+        switch(type){
+            case "Storage":
+                usage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+                break;
+            case "Vertex":
+                usage = GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+                break;
+            case "Index":
+                usage = GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+                break;
+            case "Uniform":
+                usage = GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+                break;
+            default:
+                throw Error("Buffer type does not exist " + type)
+        }
+
         const buffer = this.client.device.createBuffer({
             label:name,
             size:size,
-            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
-        }) 
+            usage:usage
+        })
 
         const bufferInfo  = {
-            type:'storage',
+            type:type,
             name:name,
             buffer:buffer,
             index:this.buffers.length
         }
 
         this.buffers.push(bufferInfo)
-
-        return bufferInfo
-    }
-
-    addVertexBuffer(name, size){
-        const buffer = this.client.device.createBuffer({
-            label:name,
-            size:size,
-            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-        }) 
-
-        const bufferInfo  = {
-            type:'vertex',
-            name:name,
-            buffer:buffer,
-            index:this.buffers.length
-        }
-
-        this.buffers.push(bufferInfo)
-
-        return bufferInfo
-    }
-
-    addIndexBuffer(name, size){
-        const buffer = this.client.device.createBuffer({
-            label:name,
-            size:size,
-            usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
-        }) 
-
-        const bufferInfo  = {
-            type:'index',
-            name:name,
-            buffer:buffer,
-            index:this.buffers.length
-        }
-
-        this.buffers.push(bufferInfo)
-
-        return bufferInfo
-    }
-
-    addUniformBuffer(name, size){
-        const buffer = this.client.device.createBuffer({
-            label:name,
-            size:size,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        }) 
-
-        const bufferInfo  = {
-            type:'uniform',
-            name:name,
-            buffer:buffer,
-            index:this.buffers.length
-        }
-
-        this.buffers.push(bufferInfo)
-
-        return bufferInfo
+        return buffer
     }
 
     
     addBindGroup(name, resource){
-
-      /*  const entries = resources.map((resource, index) => ({
-            binding: index,
-            resource: resource
-        }));   
-        */ 
 
         const bindGroup = this.client.device.createBindGroup({
             label:name,
@@ -183,15 +136,11 @@ export class WebGpuApp{
         return bindGroupInfo
     }
 
-    writeBuffers(){
-        for (const buff of this.toWriteToBuff) {
-            const buffer = this.buffers[buff.index].buffer;
-            console.log(this.toWriteToBuff[0].data)
-            console.log(buffer)
-            this.client.device.queue.writeBuffer(buffer, 0, this.toWriteToBuff[buff.index].data)
-        }
+    writeBuffer(buffer, data, index){
+        if (!buffer.size > index > 0) { throw Error("Writing to buffer out of bounds")}
+        this.client.device.queue.writeBuffer(buffer, index, data)
     }
-
+    
     getBuffer(name){
         return this.buffers.filter(buffer => buffer.name == name);
     }

@@ -31,7 +31,7 @@ const code =
         var out : VertexOutput;
 
         out.position = result;
-        out.color = colors[index % 3];
+        out.color = (0.5 * (result + vec4f(1.0, 1.0, 1.0, 1.0)));
         return out;
        
     }
@@ -42,7 +42,7 @@ const code =
     }
 `
 
-function encodeCommands(TableApp, model){
+function render(TableApp, model){
     const encoder = TableApp.client.device.createCommandEncoder({
         label:"table encoder",
         });
@@ -60,17 +60,18 @@ function encodeCommands(TableApp, model){
     renderPass.end()
     const commands = encoder.finish();
 
-    return commands;
+    TableApp.client.device.queue.submit([commands])
 }
+
 
 async function main(){
 
     const client = await getClient()
 
-    const Bunny = new Model("/static/models/cone.obj")
+    const Bunny = new Model("/static/models/cube.obj")
     await Bunny.loadFromFile()
 
-    const eye = glMatrix.vec3.fromValues(-10, 5, 0)
+    const eye = glMatrix.vec3.fromValues(4, 6, 2)
     const center = glMatrix.vec3.fromValues(0, 0 ,0)
 
     const formBuffInfo = Bunny.createMatrices(client.canvas, eye, center)
@@ -95,7 +96,7 @@ async function main(){
                 {
                   arrayStride: 4 * 4, // 4 floats, 4 bytes each
                   attributes: [
-                    {shaderLocation: 0, offset: 0, format: 'float32x4'},  // position
+                    {shaderLocation: 0, offset: 0, format: 'float32x4'}, 
                   ],
                 },
               ],
@@ -129,7 +130,7 @@ async function main(){
 
     const formToWrite = {
         index:bunnyFormBuff.index,
-        data:mvpToWrite
+        data:mvp ToWrite
     }
 
     TableApp.toWriteToBuff.push(texToWrite)
@@ -140,8 +141,21 @@ async function main(){
 
     TableApp.renderPassDescriptor.colorAttachments[0].view = client.context.getCurrentTexture().createView();
 
-    TableApp.commandBuffer = encodeCommands(TableApp, Bunny)
-    TableApp.run();
+    const settings = {
+        eyeX: 4,
+        eyeY: 6,
+        eyeZ: 2
+    }
+
+    const gui = new dat.GUI()
+    gui.onChange(render)
+    gui.add(settings, "eyeX")
+    gui.add(settings, "eyeY")
+    gui.add(settings, "eyeZ")
+
+    render(TableApp, Bunny)
+
+
 }
 
 main()

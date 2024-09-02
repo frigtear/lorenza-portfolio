@@ -108,7 +108,7 @@ export class Model {
         const fovy = Math.PI / 4; 
         const aspect = canvas.width / canvas.height; 
         const near = 0.1;
-        const far = 1000;
+        const far = 10000;
 
         glMatrix.mat4.lookAt(view, eye, center, up)
         glMatrix.mat4.perspective(perspective, fovy, aspect, near, far);
