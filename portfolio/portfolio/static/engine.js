@@ -1,7 +1,6 @@
 //import { Model } from "/static/parser.js"
 
-
-// A Generic webgpu application, that is loaded into every website page
+// Core graphics engine
 
 const notSupportedMessage = "this website is not supported by this browser, please reload this site on another browser" 
 
@@ -24,21 +23,32 @@ export class Client {
 
 export class Engine{
 
-    clearColor;
-    pipeline;
-    shaderModule;
-    commandBuffer;
-    renderPassDescriptor; 
-    appName;
+    // Config
+    clearColor = [0.3, 0.3, 0.3, 1]
+
+    // Keeping track of objects
     client;
     models = {}; 
     buffers = [];
     bindGroups = [];
+    pipeline;
+    shaderModule;
+    renderPassDescriptor; 
+    commandBuffer;
     
-    constructor(name, client) {
-        this.clearColor = [0.3, 0.3, 0.3, 1.0] // GRAY
-        this.appName = name;
+    // Transformations
+    near = 0.1;
+    far = 1000;
+    up = glMatrix.vec3.fromValues(0, 1, 0);
+    fovy = Math.PI / 4; 
+    aspect;
+    near = 0.1;
+    far = 10000;
+
+    constructor(name, client, clearColor) {
+        this.clearColor = clearColor // GRAY
         this.client = client;
+        aspect = canvas.width / canvas.height; 
         this.renderPassDescriptor = {
             label:`${this.appName} render pass`,
             colorAttachments: [
@@ -50,7 +60,6 @@ export class Engine{
             ]
         }
     }
-
 
     resizeCanvas(){
         this.client.canvas.width = window.innerWidth
@@ -71,8 +80,13 @@ export class Engine{
         });
         this.shaderModule = module
     }
-
     
+
+    setPipeline(pipeline){
+        this.pipeline = pipeline
+    }
+
+
     addBuffer(name, size, type){
     
         switch(type){
@@ -136,20 +150,45 @@ export class Engine{
         return bindGroupInfo
     }
 
+
     writeBuffer(buffer, data, index){
         if (!buffer.size > index > 0) { throw Error("Writing to buffer out of bounds")}
         this.client.device.queue.writeBuffer(buffer, index, data)
     }
     
+
     getBuffer(name){
         return this.buffers.filter(buffer => buffer.name == name);
     }
 
 
-    run() {
-        this.client.device.queue.submit([this.commandBuffer])
+    addModels(model){
+        this.models.push(model)
+    }
+
+
+    getTransformation(eye, center){
+        const view = glMatrix.mat4.create();
+        const perspective = glMatrix.mat4.create();
+        const mvp = glMatrix.mat4.create();
+
+        glMatrix.mat4.lookAt(view, eye, center, this.up)
+        glMatrix.mat4.perspective(perspective, this.fovy, this.aspect, this.near, this.far);
+        glMatrix.mat4.multiply(mvp, perspective, view)
+
+        const matrixValues = {
+            matPerspective: perspective,
+            matView: view,
+            matModel: null,
+            matMvp: mvp,
+            finalMvpValues: new Float32Array(mvp)
+        }
+        
+        this.matrix = matrixValues
+        return matrixValues
     }
 }
+
 
 
 export async function getClient(){
