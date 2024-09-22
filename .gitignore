@@ -10,3 +10,4 @@ portfolio/node_modules
 portfolio/portfolio/static/bundle.js
 venv
 no-wifi
+.venv

@@ -45,7 +45,7 @@ export class Engine{
     near = 0.1;
     far = 10000;
 
-    constructor(name, client, clearColor) {
+    constructor(client, clearColor) {
         this.clearColor = clearColor // GRAY
         this.client = client;
         aspect = canvas.width / canvas.height; 
@@ -167,7 +167,7 @@ export class Engine{
     }
 
 
-    getTransformation(eye, center){
+    getMvp(eye, center){
         const view = glMatrix.mat4.create();
         const perspective = glMatrix.mat4.create();
         const mvp = glMatrix.mat4.create();
