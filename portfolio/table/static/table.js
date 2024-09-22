@@ -42,19 +42,20 @@ const code =
     }
 `
 
-function render(TableApp, model){
+
+function renderFrame(engine, model){
     const encoder = TableApp.client.device.createCommandEncoder({
         label:"table encoder",
         });
 
-    const renderPass = encoder.beginRenderPass(TableApp.renderPassDescriptor);
-    renderPass.setPipeline(TableApp.pipeline);
+    const renderPass = encoder.beginRenderPass(engine.renderPassDescriptor);
+    renderPass.setPipeline(engine.pipeline);
     
     TableApp.writeBuffers()
 
-    renderPass.setBindGroup(0, TableApp.bindGroups[0])
-    renderPass.setVertexBuffer(0, TableApp.buffers[0].buffer)
-    renderPass.setIndexBuffer(TableApp.buffers[1].buffer, 'uint16')
+    renderPass.setBindGroup(0, engine.bindGroups[0])
+    renderPass.setVertexBuffer(0, engine.buffers[0].buffer)
+    renderPass.setIndexBuffer(engine.buffers[1].buffer, 'uint16')
 
     renderPass.drawIndexed(model.finalBufferValues.faces.length)
     renderPass.end()
@@ -66,29 +67,12 @@ function render(TableApp, model){
 
 async function main(){
 
-    const client = await getClient()
+    engine.setShaderModule(code)
 
-    const Bunny = new Model("/static/models/cube.obj")
-    await Bunny.loadFromFile()
+    const engine = new Engine("Table", client)
 
-    const eye = glMatrix.vec3.fromValues(4, 6, 2)
-    const center = glMatrix.vec3.fromValues(0, 0 ,0)
-
-    const formBuffInfo = Bunny.createMatrices(client.canvas, eye, center)
-
-    const finalValues = Bunny.finalBufferValues
-
-    const verticesToWrite = new Float32Array(finalValues.vertices)
-    const facesToWrite = new Uint16Array(finalValues.faces)
-    const mvpToWrite = formBuffInfo.finalMvpValues;
-
-
-    const TableApp = new WebGpuApp("Table", client)
-
-    TableApp.setShaderModule(code)
-
-    const tablePipeline = TableApp.client.device.createRenderPipeline({
-        label:`${TableApp.name} pipeline`,
+    const pipeline = engine.client.device.createRenderPipeline({
+        label:`${engine.name} pipeline`,
         layout:'auto',
         vertex:{
             module:TableApp.shaderModule,
@@ -103,43 +87,43 @@ async function main(){
             entryPoint:'vs'
         },
         fragment:{
-            module:TableApp.shaderModule,
+            module:engine.shaderModule,
             entryPoint:'fs',
             targets:[{format:client.format}]
         }
-
     })
 
-    TableApp.pipeline = tablePipeline
+    const client = await getClient()
+    const object = new Model("/static/models/cube.obj")
+    mesh = await object.loadFromFile()
 
+    const eye = glMatrix.vec3.fromValues(4, 6, 2)
+    const center = glMatrix.vec3.fromValues(0, 0 ,0)
+
+    const formBuffInfo = engine.getTransformation(client.canvas, eye, center)
+
+    const finalValues = object.finalBufferValues
+
+
+    
+    setPipeline(pipeline)
     TableApp.resizeCanvas()
 
-    const bunnyTexBuff = TableApp.addVertexBuffer("Bunny Vertex Buffer", verticesToWrite.byteLength) // index 0
-    const bunnyDexBuff = TableApp.addIndexBuffer("Bunny Index Buffer", facesToWrite.byteLength) // index 1
-    const bunnyFormBuff = TableApp.addUniformBuffer("Bunny Matrix Uniform", mvpToWrite.byteLength)
+    const verticesToWrite = new Float32Array(finalValues.vertices)
+    const facesToWrite = new Uint16Array(finalValues.faces)
+    const mvpToWrite = formBuffInfo.finalMvpValues;
 
-    const texToWrite = {
-        index:bunnyTexBuff.index,
-        data:verticesToWrite
-    }
+    const verticeStorage = engine.addBuffer("Vertex Buffer", verticesToWrite.byteLength, "Vertex") // index 0
+    const bunnyDexBuff = engine.addBuffer("Index Buffer", facesToWrite.byteLength, "Index") // index 1
+    const bunnyFormBuff = engine.addBuffer("Matrix Uniform", mvpToWrite.byteLength, "Uniform")
 
-    const dexToWrite = {
-        index:bunnyDexBuff.index,
-        data:facesToWrite
-    }
+    engine.toWriteToBuff.push(texToWrite)
+    engine.toWriteToBuff.push(dexToWrite)
+    engine.toWriteToBuff.push(formToWrite)
 
-    const formToWrite = {
-        index:bunnyFormBuff.index,
-        data:mvp ToWrite
-    }
+    engine.addBindGroup("uniform MVP matrix bind group", bunnyFormBuff.buffer)
 
-    TableApp.toWriteToBuff.push(texToWrite)
-    TableApp.toWriteToBuff.push(dexToWrite)
-    TableApp.toWriteToBuff.push(formToWrite)
-
-    TableApp.addBindGroup("uniform MVP matrix bind group", bunnyFormBuff.buffer)
-
-    TableApp.renderPassDescriptor.colorAttachments[0].view = client.context.getCurrentTexture().createView();
+    engine.renderPassDescriptor.colorAttachments[0].view = client.context.getCurrentTexture().createView();
 
     const settings = {
         eyeX: 4,
@@ -153,9 +137,8 @@ async function main(){
     gui.add(settings, "eyeY")
     gui.add(settings, "eyeZ")
 
-    render(TableApp, Bunny)
-
-
+    render(engine, Bunny)
 }
+
 
 main()

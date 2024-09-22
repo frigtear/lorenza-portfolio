@@ -21,11 +21,6 @@ export class Model {
     faces = [];
     triangles = [];
 
-   
-    matrix = null 
-
-   
-
     finalBufferValues = null;
     
     constructor(path) {
@@ -71,61 +66,11 @@ export class Model {
             }
         });
 
-       this.finalBufferValues = {
+        this.finalBufferValues = {
         vertices : new Float32Array(this.vertices),
         faces : new Uint16Array(this.faces.flat()),
        }
 
+       return this.finalBufferValues
     }
-/*
-    orthogonalize(width, height){
-        const near = 0.1
-        const far = 1000
-        width /= 2
-        height /= 2
-        
-        let orthoMatrix = glMatrix.mat4.create();
-        let orthogonalizedVertices = []
-        glMatrix.mat4.ortho(orthoMatrix, -width, width, -height, height, near, far)
-        this.vertices.forEach(vertex => {
-            let temp = glMatrix.vec4.create()
-            glMatrix.vec4.transformMat4(temp, vertex, orthoMatrix)
-            orthogonalizedVertices.push(temp);
-        })
-        this.vertices = orthogonalizedVertices;
-        console.log(this.vertices)
-    }
-    */
-
-    createMatrices(canvas, eye, center){
-        const view = glMatrix.mat4.create();
-        const perspective = glMatrix.mat4.create();
-        const mvp = glMatrix.mat4.create();
-
-    
-        const up = glMatrix.vec3.fromValues(0, 1, 0)
-
-        const fovy = Math.PI / 4; 
-        const aspect = canvas.width / canvas.height; 
-        const near = 0.1;
-        const far = 10000;
-
-        glMatrix.mat4.lookAt(view, eye, center, up)
-        glMatrix.mat4.perspective(perspective, fovy, aspect, near, far);
-
-        glMatrix.mat4.multiply(mvp, perspective, view)
-
-        const matrixValues = {
-            matPerspective: perspective,
-            matView: view,
-            matModel: null,
-            matMvp: mvp,
-            finalMvpValues: new Float32Array(mvp)
-        }
-       
-        this.matrix = matrixValues
-
-        return matrixValues
-    }
-    
 }
