@@ -1,4 +1,4 @@
-import { getClient, Client, WebGpuApp } from "/static/index.js";
+import { getClient, Client, Engine } from "/static/engine.js";
 import {Model, Vertex} from "/static/parser.js"
 
 const code = 
@@ -42,40 +42,46 @@ const code =
     }
 `
 
-
-function renderFrame(engine, model){
-    const encoder = TableApp.client.device.createCommandEncoder({
+function render_frame(engine, model){
+    const encoder = engine.client.device.createCommandEncoder({
         label:"table encoder",
         });
 
     const renderPass = encoder.beginRenderPass(engine.renderPassDescriptor);
     renderPass.setPipeline(engine.pipeline);
-    
-    TableApp.writeBuffers()
+
+    const mvp = engine.getMvp([0, 0, 1], [0, 0, 0])
 
     renderPass.setBindGroup(0, engine.bindGroups[0])
     renderPass.setVertexBuffer(0, engine.buffers[0].buffer)
     renderPass.setIndexBuffer(engine.buffers[1].buffer, 'uint16')
 
-    renderPass.drawIndexed(model.finalBufferValues.faces.length)
+    renderPass.drawIndexed(model.model_vertices.faces.length)
     renderPass.end()
     const commands = encoder.finish();
 
-    TableApp.client.device.queue.submit([commands])
+    engine.client.device.queue.submit([commands])
 }
 
 
 async function main(){
 
+    const client = await getClient()
+
+    const shape = new Model("/static/models/cube.obj")
+    await shape.loadFromFile()
+
+    const eye = glMatrix.vec3.fromValues(4, 6, 2)
+    const center = glMatrix.vec3.fromValues(0, 0 ,0)
+    const engine = new Engine(client, [1, 1, 1, 0])
+
     engine.setShaderModule(code)
 
-    const engine = new Engine("Table", client)
-
-    const pipeline = engine.client.device.createRenderPipeline({
+    const tablePipeline = engine.client.device.createRenderPipeline({
         label:`${engine.name} pipeline`,
         layout:'auto',
         vertex:{
-            module:TableApp.shaderModule,
+            module:engine.shaderModule,
             buffers: [
                 {
                   arrayStride: 4 * 4, // 4 floats, 4 bytes each
@@ -93,35 +99,20 @@ async function main(){
         }
     })
 
-    const client = await getClient()
-    const object = new Model("/static/models/cube.obj")
-    mesh = await object.loadFromFile()
+    engine.pipeline = tablePipeline
 
-    const eye = glMatrix.vec3.fromValues(4, 6, 2)
-    const center = glMatrix.vec3.fromValues(0, 0 ,0)
+    engine.resizeCanvas()
 
-    const formBuffInfo = engine.getTransformation(client.canvas, eye, center)
-
-    const finalValues = object.finalBufferValues
-
-
+    const vertex_buffer = engine.addBuffer("Shape Vertex Buffer", shape.model_vertices.vertices.byteLength, "Vertex") // index 0
     
-    setPipeline(pipeline)
-    TableApp.resizeCanvas()
+    engine.writeBuffer(vertex_buffer, 0, shape.model_vertices.vertices)
 
-    const verticesToWrite = new Float32Array(finalValues.vertices)
-    const facesToWrite = new Uint16Array(finalValues.faces)
-    const mvpToWrite = formBuffInfo.finalMvpValues;
+    const index_buffer = engine.addBuffer("Shape Index Buffer", shape.model_vertices.faces.byteLength, "Index") // index 1
+    
+    const temp = engine.getMvp([0, 0, 1], [0, 0, 0])
+    const mvp_uniform_buffer = engine.addBuffer("Shape Matrix Uniform", temp.finalMvpValues.byteLength, "Uniform")
 
-    const verticeStorage = engine.addBuffer("Vertex Buffer", verticesToWrite.byteLength, "Vertex") // index 0
-    const bunnyDexBuff = engine.addBuffer("Index Buffer", facesToWrite.byteLength, "Index") // index 1
-    const bunnyFormBuff = engine.addBuffer("Matrix Uniform", mvpToWrite.byteLength, "Uniform")
-
-    engine.toWriteToBuff.push(texToWrite)
-    engine.toWriteToBuff.push(dexToWrite)
-    engine.toWriteToBuff.push(formToWrite)
-
-    engine.addBindGroup("uniform MVP matrix bind group", bunnyFormBuff.buffer)
+    engine.addBindGroup("uniform MVP matrix bind group", mvp_uniform_buffer)
 
     engine.renderPassDescriptor.colorAttachments[0].view = client.context.getCurrentTexture().createView();
 
@@ -132,13 +123,11 @@ async function main(){
     }
 
     const gui = new dat.GUI()
-    gui.onChange(render)
     gui.add(settings, "eyeX")
     gui.add(settings, "eyeY")
     gui.add(settings, "eyeZ")
 
-    render(engine, Bunny)
+    render_frame(engine, shape)
 }
-
 
 main()

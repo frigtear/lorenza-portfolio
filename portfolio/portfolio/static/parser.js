@@ -1,5 +1,4 @@
 // Parsing waveform .obj files
-import { Client } from "/static/index.js";
 //import {glMatrix} from "/static/glmatrix.js"
 
 export class Vertex {
@@ -21,7 +20,7 @@ export class Model {
     faces = [];
     triangles = [];
 
-    finalBufferValues = null;
+    model_vertices = null;
     
     constructor(path) {
         this.pathToModel = path;
@@ -66,11 +65,11 @@ export class Model {
             }
         });
 
-        this.finalBufferValues = {
+        this.model_vertices = {
         vertices : new Float32Array(this.vertices),
         faces : new Uint16Array(this.faces.flat()),
        }
 
-       return this.finalBufferValues
+       return this.model_vertices
     }
 }

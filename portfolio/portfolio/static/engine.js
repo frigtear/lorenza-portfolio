@@ -48,7 +48,7 @@ export class Engine{
     constructor(client, clearColor) {
         this.clearColor = clearColor // GRAY
         this.client = client;
-        aspect = canvas.width / canvas.height; 
+        this.aspect = client.canvas.width / client.canvas.height; 
         this.renderPassDescriptor = {
             label:`${this.appName} render pass`,
             colorAttachments: [
@@ -88,7 +88,9 @@ export class Engine{
 
 
     addBuffer(name, size, type){
-    
+        
+        let usage = null
+
         switch(type){
             case "Storage":
                 usage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
@@ -153,7 +155,7 @@ export class Engine{
 
     writeBuffer(buffer, data, index){
         if (!buffer.size > index > 0) { throw Error("Writing to buffer out of bounds")}
-        this.client.device.queue.writeBuffer(buffer, index, data)
+        this.client.device.queue.writeBuffer(buffer, data, index)
     }
     
 
