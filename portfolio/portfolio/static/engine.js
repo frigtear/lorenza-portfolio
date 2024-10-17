@@ -153,10 +153,16 @@ export class Engine{
     }
 
 
-    writeBuffer(buffer, data, index){
-        if (!buffer.size > index > 0) { throw Error("Writing to buffer out of bounds")}
-        this.client.device.queue.writeBuffer(buffer, data, index)
+    writeBuffer(buffer, index, data){
+      //  if (!buffer.size > index > 0) { throw Error("Writing to buffer out of bounds")}
+        this.client.device.queue.writeBuffer(buffer, index, data)
     }
+
+    writeBuffer_2(buffer, index, data, offset, length){
+        //  if (!buffer.size > index > 0) { throw Error("Writing to buffer out of bounds")}
+          this.client.device.queue.writeBuffer(buffer, index, data, offset, length)
+    }
+      
     
 
     getBuffer(name){
@@ -186,8 +192,8 @@ export class Engine{
             finalMvpValues: new Float32Array(mvp)
         }
         
-        this.matrix = matrixValues
-        return matrixValues
+      
+        return mvp
     }
 }
 

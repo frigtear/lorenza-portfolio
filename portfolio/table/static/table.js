@@ -42,25 +42,38 @@ const code =
     }
 `
 
-function render_frame(engine, model){
+function render_frame(engine, model, settings){
+    
+    console.log([settings.eyeX, settings.eyeY, settings.eyeZ])
+
+    const mvp = engine.getMvp([settings.eyeX, settings.eyeY, settings.eyeZ], [0, 0, 0])
+
+    engine.writeBuffer(engine.buffers[2].buffer, 0, mvp.buffer)
+
     const encoder = engine.client.device.createCommandEncoder({
         label:"table encoder",
         });
 
-    const renderPass = encoder.beginRenderPass(engine.renderPassDescriptor);
-    renderPass.setPipeline(engine.pipeline);
 
-    const mvp = engine.getMvp([0, 0, 1], [0, 0, 0])
+
+    const renderPass = encoder.beginRenderPass(engine.renderPassDescriptor);
+
+  //  engine.renderPassDescriptor.colorAttachments[0].view = engine.client.context.getCurrentTexture().createView()
+
+    renderPass.setPipeline(engine.pipeline);
 
     renderPass.setBindGroup(0, engine.bindGroups[0])
     renderPass.setVertexBuffer(0, engine.buffers[0].buffer)
     renderPass.setIndexBuffer(engine.buffers[1].buffer, 'uint16')
-
+    
     renderPass.drawIndexed(model.model_vertices.faces.length)
+    
     renderPass.end()
     const commands = encoder.finish();
 
     engine.client.device.queue.submit([commands])
+
+    requestAnimationFrame(() => render_frame(engine, model, settings));
 }
 
 
@@ -73,7 +86,7 @@ async function main(){
 
     const eye = glMatrix.vec3.fromValues(4, 6, 2)
     const center = glMatrix.vec3.fromValues(0, 0 ,0)
-    const engine = new Engine(client, [1, 1, 1, 0])
+    const engine = new Engine(client, [0.3, 0.3, 0.3, 0])
 
     engine.setShaderModule(code)
 
@@ -109,25 +122,28 @@ async function main(){
 
     const index_buffer = engine.addBuffer("Shape Index Buffer", shape.model_vertices.faces.byteLength, "Index") // index 1
     
+    engine.writeBuffer(index_buffer, 0, shape.model_vertices.faces)
+
     const temp = engine.getMvp([0, 0, 1], [0, 0, 0])
-    const mvp_uniform_buffer = engine.addBuffer("Shape Matrix Uniform", temp.finalMvpValues.byteLength, "Uniform")
+    const mvp_uniform_buffer = engine.addBuffer("Shape Matrix Uniform", temp.byteLength, "Uniform")
 
     engine.addBindGroup("uniform MVP matrix bind group", mvp_uniform_buffer)
 
     engine.renderPassDescriptor.colorAttachments[0].view = client.context.getCurrentTexture().createView();
 
     const settings = {
-        eyeX: 4,
-        eyeY: 6,
+        eyeX: 2,
+        eyeY: 2,
         eyeZ: 2
     }
 
     const gui = new dat.GUI()
-    gui.add(settings, "eyeX")
-    gui.add(settings, "eyeY")
-    gui.add(settings, "eyeZ")
+    gui.add(settings, "eyeX", -10, 10)
+    gui.add(settings, "eyeY", -10, 10)
+    gui.add(settings, "eyeZ", -10, 10)
 
-    render_frame(engine, shape)
+    requestAnimationFrame(() => render_frame(engine, shape, settings));
+
 }
 
 main()
